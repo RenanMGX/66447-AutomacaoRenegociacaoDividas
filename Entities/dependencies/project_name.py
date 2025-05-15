@@ -1,0 +1,1 @@
+PROJECT_NAME:str = "66447 - Automação de Renegociação de Dividas"
