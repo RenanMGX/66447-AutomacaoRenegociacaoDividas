@@ -6,5 +6,8 @@ default:Dict[str, Dict[str,object]] = {
         'hostname': 'Patrimar-RPA',
         'port': '80',
         'token': 'Central-RPA'
+    },
+    'crd': {
+        'imobme': 'IMOBME_QAS'
     }
 }
