@@ -169,12 +169,10 @@ class Imobme(NavegadorChrome):
         
         self.__esperar_carregamento() 
         
-        
         total_diferenca = round(float(self._find_element(By.ID, 'total-diferenca').text.replace('.', '').replace(',', '.')), 2)
         
         if not total_diferenca == round(dados['Valor parcelado'], 2):
             return f"Valor parcelado: {round(dados['Valor parcelado'], 2)} diferente do valor total diferenca: {total_diferenca}"
-        
         
         # Parcelas
         while len(str(self._find_element(By.ID, 'ValorSerie').get_attribute('value'))) > 0:
@@ -249,8 +247,6 @@ class Imobme(NavegadorChrome):
         
         self._find_element(By.ID, 'Observacao').send_keys("KITEI")
         
-        import pdb;pdb.set_trace()
-        return "Sucesso!"
         self._find_element(By.ID, 'Solicitar').click()
         
         try:
