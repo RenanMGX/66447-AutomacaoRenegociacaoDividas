@@ -13,3 +13,7 @@ class CobrancaError(Exception):
 class RelatorioError(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
+        
+class ValorReajusteError(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)

@@ -3,11 +3,12 @@ import re
 import exceptions
 
 from dependencies.functions import P
-from dependencies.navegador_chrome import NavegadorChrome, By, Keys, WebDriver, WebElement
+from dependencies.navegador_chrome import NavegadorChrome, By, Keys, WebDriver, WebElement, Select
 from dependencies.credenciais import Credential
 from dependencies.config import Config
 from time import sleep
 from typing import Union
+from datetime import datetime
 
 class Imobme(NavegadorChrome):
     @property
@@ -71,9 +72,11 @@ class Imobme(NavegadorChrome):
         self.__load_page('Autenticacao/Login')
         self.maximize_window()
         
-    def __load_page(self, endpoint:str):
+    def __load_page(self, endpoint:str, *, remover_barra_final:bool=False):
         if not endpoint.endswith('/'):
-            endpoint += '/'
+            if not remover_barra_final:
+                endpoint += '/'
+            
         if endpoint.startswith('/'):
             endpoint = endpoint[1:]
         
@@ -91,6 +94,172 @@ class Imobme(NavegadorChrome):
     @verify_login     
     def _find_element(self, by=By.ID, value: str | None = None, *, timeout: int = 10, force: bool = False, wait_before: int | float = 0, wait_after: int | float = 0) -> WebElement:
         return super().find_element(by, value, timeout=timeout, force=force, wait_before=wait_before, wait_after=wait_after)
+        
+        
+    @verify_login
+    def registrar_renegociacao(self, dados:dict):
+        self.__load_page(f"Contrato/PosicaoFinanceira/{dados['Numero do contrato']}")
+        
+        data_base:datetime = dados['Data base']
+        self._find_element(By.ID, 'DataPosicao').clear()
+        self._find_element(By.ID, 'DataPosicao').send_keys(data_base.strftime('%d%m%Y'))
+
+        self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[2]/div[1]/form/button').click()
+        self.__esperar_carregamento()
+        self.__load_page(f"Contrato/Renegociacao/{dados['Numero do contrato']}?dataPosicao={data_base.strftime('%Y-%m-%d')}", remover_barra_final=True)
+        
+        #self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[6]/div/h4').location_once_scrolled_into_view
+        
+        self._find_element(By.XPATH, '//*[@id="tab-serie"]/thead/tr').location_once_scrolled_into_view
+        
+        data1 = dados['1° Vencimento']
+        data2 = dados['2° Vencimento']
+        tbody = self._find_element(By.XPATH, '//*[@id="tab-parcela"]/tbody')
+        for tr in tbody.find_elements(By.TAG_NAME, 'tr'):
+            td_date = datetime.strptime(tr.find_element(By.XPATH, 'td[4]').text, "%d/%m/%Y")
+            if (td_date >= data1) and (td_date <= data2):
+                td_check_box = tr.find_element(By.XPATH, 'td[1]')
+
+                td_check_box.find_elements(By.TAG_NAME, 'input')[0].click()
+                
+            self.execute_script("window.scrollBy(0, 35);")
+            
+        self._find_element(By.ID, 'AgreementTabs').location_once_scrolled_into_view
+        
+        total_com_ajuste = round(float(self._find_element(By.ID, 'total-com-ajuste').text.replace('.', '').replace(',', '.')), 2)
+        
+        if not total_com_ajuste == round(dados['Valor vencido'], 2):
+            return f"Valor vencido: {dados['Valor vencido']} diferente do valor total com ajuste: {total_com_ajuste}"
+        
+        self._find_element(By.ID, 'total-com-ajuste').location_once_scrolled_into_view
+        
+        # Parcela Unica
+        while len(str(self._find_element(By.ID, 'ValorSerie').get_attribute('value'))) > 0:
+            self._find_element(By.ID, 'ValorSerie').send_keys(Keys.BACKSPACE)
+        
+        self._find_element(By.ID, 'ValorSerie').send_keys(dados['Valor da entrada'])
+        
+        try:
+            #execuçã no PRD
+            self._find_element(By.ID, 'TipoParcelaId_chzn').click()
+            sleep(0.5)
+            self._find_element(By.ID, 'TipoParcelaId_chzn_o_10').click()
+        except:
+            #execuçã no QAS
+            self._find_element(By.ID, 'TipoParcelaId_chosen').click()
+            sleep(0.5)
+            self._find_element(By.ID, 'TipoParcelaId_chosen_o_9').click()
+        
+        
+        try:
+            #execuçã no PRD
+            self._find_element(By.ID, 'PeriodicidadeId_chzn').click()
+            sleep(0.5)
+            self._find_element(By.ID, 'PeriodicidadeId_chzn_o_1').click()
+        except:
+            #execuçã no QAS
+            self._find_element(By.ID, 'PeriodicidadeId_chosen').click()
+            sleep(0.5)
+            self._find_element(By.ID, 'PeriodicidadeId_chosen_o_1').click()
+        
+        self._find_element(By.ID, 'DataPrimeiraParcela').clear()
+        self._find_element(By.ID, 'DataPrimeiraParcela').send_keys(dados['Vencimento da entrada'].strftime('%d%m%Y'))
+        
+        self._find_element(By.ID, 'btnSerieAdd').click()
+        
+        self.__esperar_carregamento() 
+        
+        
+        total_diferenca = round(float(self._find_element(By.ID, 'total-diferenca').text.replace('.', '').replace(',', '.')), 2)
+        
+        if not total_diferenca == round(dados['Valor parcelado'], 2):
+            return f"Valor parcelado: {round(dados['Valor parcelado'], 2)} diferente do valor total diferenca: {total_diferenca}"
+        
+        
+        # Parcelas
+        while len(str(self._find_element(By.ID, 'ValorSerie').get_attribute('value'))) > 0:
+            self._find_element(By.ID, 'ValorSerie').send_keys(Keys.BACKSPACE)
+        
+        self._find_element(By.ID, 'ValorSerie').send_keys(round(dados['Valor parcelado'], 2))
+        
+        #tipo de Parcela
+        try:
+            #execuçã no PRD
+            self._find_element(By.ID, 'TipoParcelaId_chzn').click()
+            sleep(0.5)
+            self._find_element(By.ID, 'TipoParcelaId_chzn_o_10').click()
+        except:
+            #execuçã no QAS
+            self._find_element(By.ID, 'TipoParcelaId_chosen').click()
+            sleep(0.5)
+            self._find_element(By.ID, 'TipoParcelaId_chosen_o_9').click()
+        
+        #Periodicidade
+        try:
+            #execuçã no PRD
+            self._find_element(By.ID, 'PeriodicidadeId_chzn').click()
+            sleep(0.5)
+            self._find_element(By.ID, 'PeriodicidadeId_chzn_o_2').click()
+        except:
+            #execuçã no QAS
+            self._find_element(By.ID, 'PeriodicidadeId_chosen').click()
+            sleep(0.5)
+            self._find_element(By.ID, 'PeriodicidadeId_chosen_o_2').click()
+        
+        
+        for _ in range(5):
+            self._find_element(By.ID, 'QuantidadeParcelas').send_keys(Keys.BACK_SPACE)
+        self._find_element(By.ID, 'QuantidadeParcelas').send_keys(dados['Quantidade de Parcelas'])
+        
+        self._find_element(By.ID, 'ValorParcela').click()
+        
+        valor_parcela = round(float(str(self._find_element(By.ID, 'ValorParcela').get_attribute('value')).replace('.', '').replace(',', '.')), 2)
+        
+        if not valor_parcela == round(dados['Valor da mensal'], 2):
+            return f"Valor da mensal: {round(dados['Valor da mensal'], 2)} diferente do valor da parcela: {valor_parcela}"
+        
+        
+        self._find_element(By.ID, 'DataPrimeiraParcela').clear()
+        self._find_element(By.ID, 'DataPrimeiraParcela').send_keys(dados['Vencimento '].strftime('%d%m%Y'))
+        
+        self._find_element(By.ID, 'TemCorrecao').click()
+        
+        self._find_element(By.ID, 'btnSerieAdd').click()
+        
+        self.__esperar_carregamento() 
+          
+        
+        total_diferenca = float(self._find_element(By.ID, 'total-diferenca').text.replace('.', '').replace(',', '.'))
+        
+        if total_diferenca != 0:
+            return f"Valor total diferenca: {total_diferenca} diferente de 0"
+        
+        #import pdb;pdb.set_trace()
+        try:
+            self._find_element(By.XPATH, '/html/body/div[2]/div[3]/div/button', timeout=2).click()
+            erro_msg = self._find_element(By.ID, 'mensagemModal').text
+            return f"{round(dados['Valor parcelado'], 2)} {erro_msg}"
+
+        except:
+            pass
+        self._find_element(By.ID, 'MotivoId').location_once_scrolled_into_view
+        
+        options = Select(self._find_element(By.ID, 'MotivoId'))
+        options.select_by_value('5')
+        
+        self._find_element(By.ID, 'Observacao').send_keys("KITEI")
+        
+        import pdb;pdb.set_trace()
+        return "Sucesso!"
+        self._find_element(By.ID, 'Solicitar').click()
+        
+        try:
+            alert = self._find_element(By.ID, 'divAlert', timeout=1)
+            return alert.text
+        except:
+            pass
+        
+        return "Sucesso!"
         
     @verify_login
     def teste(self):
