@@ -9,7 +9,6 @@ import requests
 import json
 from getpass import getuser
 from socket import gethostname
-from .project_name import PROJECT_NAME
 from .config import Config
 from functions import P
 from credenciais import Credential
@@ -23,7 +22,7 @@ class Logs:
     def name(self) -> str:
         return self.__name
     
-    def __init__(self, name:str=PROJECT_NAME, *, path_folder:str=os.path.join(os.getcwd(), 'Logs'), hostname:str=Config()['log']['hostname'], port:str=Config()['log']['port'], token:str=Credential(Config()['log']['token']).load()['token']) -> None:
+    def __init__(self, name:str=os.environ['project_name'], *, path_folder:str=os.path.join(os.getcwd(), 'Logs'), hostname:str=Config()['log']['hostname'], port:str=Config()['log']['port'], token:str=Credential(Config()['log']['token']).load()['token']) -> None:
         self.__path_folder:str = path_folder
         self.__name:str = name
         if not os.path.exists(self.path_folder):

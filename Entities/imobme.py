@@ -57,7 +57,7 @@ class Imobme(NavegadorChrome):
             return result
         return wrap
     
-    def __init__(self, *, download_path:str=os.path.join(os.getcwd(), 'downloads')) -> None:
+    def __init__(self, *, headless:bool=True, download_path:str=os.path.join(os.getcwd(), 'downloads')) -> None:
         if (re.search(r'[.][a-zA-Z]+', os.path.basename(download_path))):
             download_path = os.path.dirname(download_path)
         if not os.path.exists(download_path):
@@ -65,7 +65,7 @@ class Imobme(NavegadorChrome):
             
         self.__crd:dict = Credential(Config()['crd']['imobme']).load()
                     
-        super().__init__(download_path=download_path)
+        super().__init__(download_path=download_path, headless=headless)
         
         self.__load_page('Autenticacao/Login')
         sleep(3)
@@ -97,7 +97,7 @@ class Imobme(NavegadorChrome):
         
         
     @verify_login
-    def registrar_renegociacao(self, dados:dict):
+    def registrar_renegociacao(self, dados:dict, *, debug:bool=False):
         self.__load_page(f"Contrato/PosicaoFinanceira/{dados['Numero do contrato']}")
         
         data_base:datetime = dados['Data base']
@@ -139,29 +139,10 @@ class Imobme(NavegadorChrome):
         
         self._find_element(By.ID, 'ValorSerie').send_keys(dados['Valor da entrada'])
         
-        try:
-            #execuçã no PRD
-            self._find_element(By.ID, 'TipoParcelaId_chzn').click()
-            sleep(0.5)
-            self._find_element(By.ID, 'TipoParcelaId_chzn_o_10').click()
-        except:
-            #execuçã no QAS
-            self._find_element(By.ID, 'TipoParcelaId_chosen').click()
-            sleep(0.5)
-            self._find_element(By.ID, 'TipoParcelaId_chosen_o_9').click()
+        self.__select(select_id='TipoParcelaId_chosen', target='Poupança')
         
-        
-        try:
-            #execuçã no PRD
-            self._find_element(By.ID, 'PeriodicidadeId_chzn').click()
-            sleep(0.5)
-            self._find_element(By.ID, 'PeriodicidadeId_chzn_o_1').click()
-        except:
-            #execuçã no QAS
-            self._find_element(By.ID, 'PeriodicidadeId_chosen').click()
-            sleep(0.5)
-            self._find_element(By.ID, 'PeriodicidadeId_chosen_o_1').click()
-        
+        self.__select(select_id='PeriodicidadeId_chosen', target='Única')
+                
         self._find_element(By.ID, 'DataPrimeiraParcela').clear()
         self._find_element(By.ID, 'DataPrimeiraParcela').send_keys(dados['Vencimento da entrada'].strftime('%d%m%Y'))
         
@@ -180,29 +161,10 @@ class Imobme(NavegadorChrome):
         
         self._find_element(By.ID, 'ValorSerie').send_keys(round(dados['Valor parcelado'], 2))
         
-        #tipo de Parcela
-        try:
-            #execuçã no PRD
-            self._find_element(By.ID, 'TipoParcelaId_chzn').click()
-            sleep(0.5)
-            self._find_element(By.ID, 'TipoParcelaId_chzn_o_10').click()
-        except:
-            #execuçã no QAS
-            self._find_element(By.ID, 'TipoParcelaId_chosen').click()
-            sleep(0.5)
-            self._find_element(By.ID, 'TipoParcelaId_chosen_o_9').click()
         
-        #Periodicidade
-        try:
-            #execuçã no PRD
-            self._find_element(By.ID, 'PeriodicidadeId_chzn').click()
-            sleep(0.5)
-            self._find_element(By.ID, 'PeriodicidadeId_chzn_o_2').click()
-        except:
-            #execuçã no QAS
-            self._find_element(By.ID, 'PeriodicidadeId_chosen').click()
-            sleep(0.5)
-            self._find_element(By.ID, 'PeriodicidadeId_chosen_o_2').click()
+        self.__select(select_id='TipoParcelaId_chosen', target='Poupança')
+        
+        self.__select(select_id='PeriodicidadeId_chosen', target='Mensal')
         
         
         for _ in range(5):
@@ -218,7 +180,7 @@ class Imobme(NavegadorChrome):
         
         
         self._find_element(By.ID, 'DataPrimeiraParcela').clear()
-        self._find_element(By.ID, 'DataPrimeiraParcela').send_keys(dados['Vencimento '].strftime('%d%m%Y'))
+        self._find_element(By.ID, 'DataPrimeiraParcela').send_keys(dados['Vencimento'].strftime('%d%m%Y'))
         
         self._find_element(By.ID, 'TemCorrecao').click()
         
@@ -247,7 +209,8 @@ class Imobme(NavegadorChrome):
         
         self._find_element(By.ID, 'Observacao').send_keys("KITEI")
         
-        self._find_element(By.ID, 'Solicitar').click()
+        if not debug:
+            self._find_element(By.ID, 'Solicitar').click()
         
         try:
             alert = self._find_element(By.ID, 'divAlert', timeout=1)
@@ -255,11 +218,25 @@ class Imobme(NavegadorChrome):
         except:
             pass
         
-        return "Sucesso!"
+        return os.environ['conclusion_phrase']
+
         
+    def __select(self, *, select_id:str, target:str, sep:str='_o_', timeout:int=100):
+        self._find_element(By.ID, select_id).click()
+        sleep(0.5)
+        for num in range(1,timeout):
+            option_id = f'{select_id}{sep}{num}'
+            try:
+                if self._find_element(By.ID, option_id, timeout=1).text == target:
+                    self._find_element(By.ID, option_id, timeout=1).click()
+                    return
+            except:
+                break
+
     @verify_login
     def teste(self):
         self.__load_page('CalculoMensal/Cobranca')
+        
         
         
 if __name__ == '__main__':
