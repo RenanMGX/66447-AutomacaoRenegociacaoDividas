@@ -36,7 +36,7 @@ class Main:
         
         df = PrepararDados.preparar_dados(path)
         if PrepararDados.validar_dados(df):
-            bot = Imobme(headless=False)
+            bot = Imobme(headless=True)
             
             retorno = {}
             for row, value in df.iterrows():
@@ -46,7 +46,7 @@ class Main:
                     retorno[row] = os.environ['conclusion_phrase']
                     continue
                 try:
-                    response = bot.registrar_renegociacao(value.to_dict(), debug=True) # <-------- Debug ON
+                    response = bot.registrar_renegociacao(value.to_dict(), debug=False) # <-------- Debug OFF
                 except Exception as e:
                     response = f"Exceção não tratada: {type(e)}, {str(e)}"
                     print(P(response, color='red'))
