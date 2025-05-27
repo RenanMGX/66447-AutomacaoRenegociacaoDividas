@@ -6,6 +6,7 @@ from dependencies.functions import P
 from dependencies.navegador_chrome import NavegadorChrome, By, Keys, WebDriver, WebElement, Select
 from dependencies.credenciais import Credential
 from dependencies.config import Config
+from dependencies.informativo import Informativo
 from time import sleep
 from typing import Union
 from datetime import datetime
@@ -82,7 +83,11 @@ class Imobme(NavegadorChrome):
         
         url = os.path.join(self.base_url, endpoint)
         print(P(f"Carregando página: {url}...          ", color='yellow'))  
-        self.get(url)
+        try:
+            self.get(url)
+            return
+        except:
+            self.get(url)
         
     def __esperar_carregamento(self, *, initial_wait:Union[int, float]=1):
         sleep(initial_wait)
@@ -97,7 +102,7 @@ class Imobme(NavegadorChrome):
         
         
     @verify_login
-    def registrar_renegociacao(self, dados:dict, *, debug:bool=False):
+    def registrar_renegociacao(self, dados:dict, *, debug:bool=False):        
         self.__load_page(f"Contrato/PosicaoFinanceira/{dados['Numero do contrato']}")
         
         data_base:datetime = dados['Data base']
@@ -129,6 +134,8 @@ class Imobme(NavegadorChrome):
         total_com_ajuste = round(float(self._find_element(By.ID, 'total-com-ajuste').text.replace('.', '').replace(',', '.')), 2)
         
         if not total_com_ajuste == round(dados['Valor vencido'], 2):
+            print(P(f"Valor vencido: {dados['Valor vencido']} diferente do valor total com ajuste: {total_com_ajuste}", color='red'))
+            Informativo().register(text=f"Valor vencido: {dados['Valor vencido']} diferente do valor total com ajuste: {total_com_ajuste}", color='<django:red>')
             return f"Valor vencido: {dados['Valor vencido']} diferente do valor total com ajuste: {total_com_ajuste}"
         
         self._find_element(By.ID, 'total-com-ajuste').location_once_scrolled_into_view
@@ -153,6 +160,8 @@ class Imobme(NavegadorChrome):
         total_diferenca = round(float(self._find_element(By.ID, 'total-diferenca').text.replace('.', '').replace(',', '.')), 2)
         
         if not total_diferenca == round(dados['Valor parcelado'], 2):
+            print(P(f"Valor parcelado: {dados['Valor parcelado']} diferente do valor total diferenca: {total_diferenca}", color='red'))
+            Informativo().register(text=f"Valor parcelado: {dados['Valor parcelado']} diferente do valor total diferenca: {total_diferenca}", color='<django:red>')
             return f"Valor parcelado: {round(dados['Valor parcelado'], 2)} diferente do valor total diferenca: {total_diferenca}"
         
         # Parcelas
@@ -176,6 +185,8 @@ class Imobme(NavegadorChrome):
         valor_parcela = round(float(str(self._find_element(By.ID, 'ValorParcela').get_attribute('value')).replace('.', '').replace(',', '.')), 2)
         
         if not valor_parcela == round(dados['Valor da mensal'], 2):
+            print(P(f"Valor da mensal: {dados['Valor da mensal']} diferente do valor da parcela: {valor_parcela}", color='red'))
+            Informativo().register(text=f"Valor da mensal: {dados['Valor da mensal']} diferente do valor da parcela: {valor_parcela}", color='<django:red>')
             return f"Valor da mensal: {round(dados['Valor da mensal'], 2)} diferente do valor da parcela: {valor_parcela}"
         
         
@@ -192,12 +203,16 @@ class Imobme(NavegadorChrome):
         total_diferenca = float(self._find_element(By.ID, 'total-diferenca').text.replace('.', '').replace(',', '.'))
         
         if total_diferenca != 0:
+            print(P(f"Valor total diferenca: {total_diferenca} diferente de 0", color='red'))
+            Informativo().register(text=f"Valor total diferenca: {total_diferenca} diferente de 0", color='<django:red>')
             return f"Valor total diferenca: {total_diferenca} diferente de 0"
         
         #import pdb;pdb.set_trace()
         try:
             self._find_element(By.XPATH, '/html/body/div[2]/div[3]/div/button', timeout=2).click()
             erro_msg = self._find_element(By.ID, 'mensagemModal').text
+            print(P(f"Erro: {erro_msg}", color='red'))
+            Informativo().register(text=f"Erro: {erro_msg}", color='<django:red>')
             return f"{round(dados['Valor parcelado'], 2)} {erro_msg}"
 
         except:
@@ -214,10 +229,15 @@ class Imobme(NavegadorChrome):
         
         try:
             alert = self._find_element(By.ID, 'divAlert', timeout=1)
+            print(P(f"Sucesso: {alert.text}", color='green'))
+            Informativo().register(text=f"Sucesso: {alert.text}", color='<django:green>')
             return alert.text
         except:
             pass
         
+    
+        print(P("Renegociação registrada com sucesso!", color='green'))
+        Informativo().register(text="Renegociação registrada com sucesso!", color='<django:green>')
         return os.environ['conclusion_phrase']
 
         
