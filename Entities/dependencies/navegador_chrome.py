@@ -211,7 +211,7 @@ class NavegadorChrome(Chrome):
         print(P(f"({by=}, {value=}): não encontrado! -> erro será executado", color='red')) if self.speak else None
         raise ElementNotFound(f"({by=}, {value=}): não encontrado!")
     
-    def get(self, url: str) -> None:
+    def get(self, url: str, *, load_timeout:int|float = 3) -> None:
         """
         Carrega a URL especificada em múltiplas tentativas, ajustando o timeout para garantir o sucesso.
 
@@ -232,7 +232,7 @@ class NavegadorChrome(Chrome):
         Raises:
             PageError: Se a página não puder ser carregada após 10 tentativas.
         """
-        self.set_page_load_timeout(3)
+        self.set_page_load_timeout(load_timeout)
         for _ in range(10):
             try:
                 result = super().get(url)

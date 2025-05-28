@@ -85,7 +85,7 @@ class Imobme(NavegadorChrome):
         url = os.path.join(self.base_url, endpoint)
         print(P(f"Carregando página: {url}...          ", color='yellow'))  
         
-        self.get(url)
+        self.get(url, load_timeout=60)
         
     def __esperar_carregamento(self, *, initial_wait:Union[int, float]=1):
         sleep(initial_wait)
