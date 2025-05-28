@@ -117,7 +117,7 @@ class Imobme(NavegadorChrome):
         
         try:
             adv_text = self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[1]/div/div').text
-            if 'Este contrato já possui uma solicitação em andamento.' in adv_text:
+            if os.environ['already_exist'] in adv_text:
                 print(P(adv_text, color='red'))
                 Informativo().register(text=adv_text, color='<django:red>')
                 return adv_text
