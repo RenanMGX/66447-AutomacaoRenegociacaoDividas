@@ -38,7 +38,10 @@ class PrepararDados:
                           'Valor parcelado',
                           'Quantidade de Parcelas',
                           'Valor da mensal',
+                          'Observação',
                           'Vencimento',
+                          'Retorno'
+                          
                       ]
                       
                       ) -> bool:
@@ -69,7 +72,7 @@ class PrepararDados:
         columns:Range = ws.range('A1').expand('right')
         observacao_address:str = ""
         for column in columns:
-            if column.value == 'Observação':
+            if column.value == 'Retorno':
                 observacao_address = column.get_address()
                 
         if observacao_address:

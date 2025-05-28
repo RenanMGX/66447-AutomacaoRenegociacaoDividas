@@ -133,7 +133,7 @@ class Imobme(NavegadorChrome):
                     break
             except:
                 pass
-                
+          
         #self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[6]/div/h4').location_once_scrolled_into_view
         
         self._find_element(By.XPATH, '//*[@id="tab-serie"]/thead/tr').location_once_scrolled_into_view
@@ -243,7 +243,10 @@ class Imobme(NavegadorChrome):
         options = Select(self._find_element(By.ID, 'MotivoId'))
         options.select_by_value('5')
         
-        self._find_element(By.ID, 'Observacao').send_keys("KITEI")
+        if dados['Observação']:
+            self._find_element(By.ID, 'Observacao').send_keys(dados['Observação'])
+        else:
+            self._find_element(By.ID, 'Observacao').send_keys("KITEI")
         
         if not debug:
             self._find_element(By.ID, 'Solicitar').click()
@@ -256,10 +259,13 @@ class Imobme(NavegadorChrome):
         except:
             pass
         
-    
+        
+        msg_final = self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[2]/div/div').text
+        
         print(P("Renegociação registrada com sucesso!", color='green'))
         Informativo().register(text="Renegociação registrada com sucesso!", color='<django:green>')
-        return os.environ['conclusion_phrase']
+        
+        return msg_final
 
         
     def __select(self, *, select_id:str, target:str, sep:str='_o_', timeout:int=100):
