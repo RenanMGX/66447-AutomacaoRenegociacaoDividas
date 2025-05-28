@@ -12,7 +12,16 @@ from Entities.imobme import Imobme
 from Entities.dependencies.logs import Logs, traceback
 from Entities.dependencies.functions import P
 
-from distutils.util import strtobool
+#from distutils.util import strtobool
+
+def strtobool(val):
+    val = val.lower()
+    if val in ('y', 'yes', 't', 'true', 'on', '1'):
+        return True
+    elif val in ('n', 'no', 'f', 'false', 'off', '0'):
+        return False
+    else:
+        raise ValueError(f"invalid truth value {val!r}")
 
 
 import pandas as pd
@@ -41,7 +50,7 @@ class Main:
         
         df = PrepararDados.preparar_dados(path)
         if PrepararDados.validar_dados(df):
-            bot = Imobme(headless=bool(strtobool(Config()['nav']['headless'])))
+            bot = Imobme(headless=strtobool(Config()['nav']['headless']))
 
             retorno = {}
             for row, value in df.iterrows():
@@ -71,7 +80,7 @@ class Main:
     @staticmethod
     def teste():
         import pdb;pdb.set_trace()
-        bool(strtobool(Config()['nav']['headless']))
+        strtobool(Config()['nav']['headless'])
         input("Teste de execução bem-sucedida. Pressione Enter para continuar...")
             
 if __name__ == '__main__':
