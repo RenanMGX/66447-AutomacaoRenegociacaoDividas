@@ -36,8 +36,8 @@ class Main:
         
         df = PrepararDados.preparar_dados(path)
         if PrepararDados.validar_dados(df):
-            bot = Imobme(headless=True)
-            
+            bot = Imobme(headless=False)
+
             retorno = {}
             for row, value in df.iterrows():
                 print(P(f"Processando linha {int(str(row)) + 1} de {len(df)}: {value['Numero do contrato']}"))

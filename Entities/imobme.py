@@ -70,8 +70,9 @@ class Imobme(NavegadorChrome):
         
         self.__load_page('Autenticacao/Login')
         sleep(3)
-        self.__load_page('Autenticacao/Login')
         self.maximize_window()
+        self.__start()
+        
         
     def __load_page(self, endpoint:str, *, remover_barra_final:bool=False):
         if not endpoint.endswith('/'):
@@ -83,11 +84,15 @@ class Imobme(NavegadorChrome):
         
         url = os.path.join(self.base_url, endpoint)
         print(P(f"Carregando página: {url}...          ", color='yellow'))  
-        try:
-            self.get(url)
-            return
-        except:
-            self.get(url)
+        
+        for _ in range(10):
+            try:
+                self.get(url)
+                return
+            except:
+                if _ >= 9:
+                    self.get(url)
+                sleep(1)
         
     def __esperar_carregamento(self, *, initial_wait:Union[int, float]=1):
         sleep(initial_wait)
@@ -100,10 +105,14 @@ class Imobme(NavegadorChrome):
     def _find_element(self, by=By.ID, value: str | None = None, *, timeout: int = 10, force: bool = False, wait_before: int | float = 0, wait_after: int | float = 0) -> WebElement:
         return super().find_element(by, value, timeout=timeout, force=force, wait_before=wait_before, wait_after=wait_after)
         
+    @verify_login
+    def __start(self):
+        self.__load_page('Contrato')
+        print(P("Pagina Iniciada no Contrato!"))
         
     @verify_login
     def registrar_renegociacao(self, dados:dict, *, debug:bool=False):        
-        self.__load_page(f"Contrato/PosicaoFinanceira/{dados['Numero do contrato']}")
+        self.__load_page(f"Contrato/PosicaoFinanceira/{int(dados['Numero do contrato'])}")
         
         data_base:datetime = dados['Data base']
         self._find_element(By.ID, 'DataPosicao').clear()
@@ -111,8 +120,20 @@ class Imobme(NavegadorChrome):
 
         self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[2]/div[1]/form/button').click()
         self.__esperar_carregamento()
-        self.__load_page(f"Contrato/Renegociacao/{dados['Numero do contrato']}?dataPosicao={data_base.strftime('%Y-%m-%d')}", remover_barra_final=True)
+        self.__load_page(f"Contrato/Renegociacao/{int(dados['Numero do contrato'])}?dataPosicao={data_base.strftime('%Y-%m-%d')}", remover_barra_final=True)
         
+        is_pcv = False
+        tbody_s = self.find_elements(By.TAG_NAME, 'tbody')
+        
+        for tbody in tbody_s:
+            try:
+                text = tbody.text
+                if f"{int(dados['Numero do contrato'])} - PCV" in text:
+                    is_pcv = True
+                    break
+            except:
+                pass
+                
         #self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[6]/div/h4').location_once_scrolled_into_view
         
         self._find_element(By.XPATH, '//*[@id="tab-serie"]/thead/tr').location_once_scrolled_into_view
@@ -175,7 +196,6 @@ class Imobme(NavegadorChrome):
         
         self.__select(select_id='PeriodicidadeId_chosen', target='Mensal')
         
-        
         for _ in range(5):
             self._find_element(By.ID, 'QuantidadeParcelas').send_keys(Keys.BACK_SPACE)
         self._find_element(By.ID, 'QuantidadeParcelas').send_keys(dados['Quantidade de Parcelas'])
@@ -193,7 +213,8 @@ class Imobme(NavegadorChrome):
         self._find_element(By.ID, 'DataPrimeiraParcela').clear()
         self._find_element(By.ID, 'DataPrimeiraParcela').send_keys(dados['Vencimento'].strftime('%d%m%Y'))
         
-        self._find_element(By.ID, 'TemCorrecao').click()
+        if is_pcv:
+            self._find_element(By.ID, 'TemCorrecao').click()
         
         self._find_element(By.ID, 'btnSerieAdd').click()
         
