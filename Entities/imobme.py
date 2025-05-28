@@ -1,6 +1,7 @@
 import os
 import re
 import exceptions
+import math
 
 from dependencies.functions import P
 from dependencies.navegador_chrome import NavegadorChrome, By, Keys, WebDriver, WebElement, Select
@@ -166,25 +167,32 @@ class Imobme(NavegadorChrome):
         self._find_element(By.ID, 'total-com-ajuste').location_once_scrolled_into_view
         
         # Parcela Unica
-        while len(str(self._find_element(By.ID, 'ValorSerie').get_attribute('value'))) > 0:
-            self._find_element(By.ID, 'ValorSerie').send_keys(Keys.BACKSPACE)
-        
-        self._find_element(By.ID, 'ValorSerie').send_keys(dados['Valor da entrada'])
-        
-        self.__select(select_id='TipoParcelaId_chosen', target='Poupança')
-        
-        self.__select(select_id='PeriodicidadeId_chosen', target='Única')
-                
-        self._find_element(By.ID, 'DataPrimeiraParcela').clear()
-        self._find_element(By.ID, 'DataPrimeiraParcela').send_keys(dados['Vencimento da entrada'].strftime('%d%m%Y'))
-        
-        if is_pcv:
-            self._find_element(By.ID, 'TemCorrecao').click()
-        
-        self._find_element(By.ID, 'btnSerieAdd').click()
-        
-        self.__esperar_carregamento() 
-        
+        try:
+            dados['Vencimento da entrada'].today()
+            if math.isnan(dados['Valor da entrada']):
+                raise Exception("não é valor valido")
+            
+            while len(str(self._find_element(By.ID, 'ValorSerie').get_attribute('value'))) > 0:
+                self._find_element(By.ID, 'ValorSerie').send_keys(Keys.BACKSPACE)
+            
+            self._find_element(By.ID, 'ValorSerie').send_keys(dados['Valor da entrada'])
+            
+            self.__select(select_id='TipoParcelaId_chosen', target='Poupança')
+            
+            self.__select(select_id='PeriodicidadeId_chosen', target='Única')
+                    
+            self._find_element(By.ID, 'DataPrimeiraParcela').clear()
+            self._find_element(By.ID, 'DataPrimeiraParcela').send_keys(dados['Vencimento da entrada'].strftime('%d%m%Y'))
+            
+            if is_pcv:
+                self._find_element(By.ID, 'TemCorrecao').click()
+            
+            self._find_element(By.ID, 'btnSerieAdd').click()
+            
+            self.__esperar_carregamento() 
+        except:
+            pass
+                    
         total_diferenca = round(float(self._find_element(By.ID, 'total-diferenca').text.replace('.', '').replace(',', '.')), 2)
         
         if not total_diferenca == round(dados['Valor parcelado'], 2):
@@ -193,39 +201,53 @@ class Imobme(NavegadorChrome):
             return f"Valor parcelado: {round(dados['Valor parcelado'], 2)} diferente do valor total diferenca: {total_diferenca}"
         
         # Parcelas
-        while len(str(self._find_element(By.ID, 'ValorSerie').get_attribute('value'))) > 0:
-            self._find_element(By.ID, 'ValorSerie').send_keys(Keys.BACKSPACE)
-        
-        self._find_element(By.ID, 'ValorSerie').send_keys(round(dados['Valor parcelado'], 2))
-        
-        
-        self.__select(select_id='TipoParcelaId_chosen', target='Poupança')
-        
-        self.__select(select_id='PeriodicidadeId_chosen', target='Mensal')
-        
-        for _ in range(5):
-            self._find_element(By.ID, 'QuantidadeParcelas').send_keys(Keys.BACK_SPACE)
-        self._find_element(By.ID, 'QuantidadeParcelas').send_keys(dados['Quantidade de Parcelas'])
-        
-        self._find_element(By.ID, 'ValorParcela').click()
-        
-        valor_parcela = round(float(str(self._find_element(By.ID, 'ValorParcela').get_attribute('value')).replace('.', '').replace(',', '.')), 2)
-        
-        if not valor_parcela == round(dados['Valor da mensal'], 2):
-            print(P(f"Valor da mensal: {dados['Valor da mensal']} diferente do valor da parcela: {valor_parcela}", color='red'))
-            Informativo().register(text=f"Valor da mensal: {dados['Valor da mensal']} diferente do valor da parcela: {valor_parcela}", color='<django:red>')
-            return f"Valor da mensal: {round(dados['Valor da mensal'], 2)} diferente do valor da parcela: {valor_parcela}"
-        
-        
-        self._find_element(By.ID, 'DataPrimeiraParcela').clear()
-        self._find_element(By.ID, 'DataPrimeiraParcela').send_keys(dados['Vencimento'].strftime('%d%m%Y'))
-        
-        if is_pcv:
-            self._find_element(By.ID, 'TemCorrecao').click()
-        
-        self._find_element(By.ID, 'btnSerieAdd').click()
-        
-        self.__esperar_carregamento() 
+        try:
+            dados['Vencimento'].today()
+            
+            if math.isnan(dados['Valor parcelado']):
+                raise Exception("não é valor valido")
+            
+            if math.isnan(dados['Quantidade de Parcelas']):
+                raise Exception("não é valor valido")
+            
+            if math.isnan(dados['Valor da mensal']):
+                raise Exception("não é valor valido")
+            
+            while len(str(self._find_element(By.ID, 'ValorSerie').get_attribute('value'))) > 0:
+                self._find_element(By.ID, 'ValorSerie').send_keys(Keys.BACKSPACE)
+            
+            self._find_element(By.ID, 'ValorSerie').send_keys(round(dados['Valor parcelado'], 2))
+            
+            
+            self.__select(select_id='TipoParcelaId_chosen', target='Poupança')
+            
+            self.__select(select_id='PeriodicidadeId_chosen', target='Mensal')
+            
+            for _ in range(5):
+                self._find_element(By.ID, 'QuantidadeParcelas').send_keys(Keys.BACK_SPACE)
+            self._find_element(By.ID, 'QuantidadeParcelas').send_keys(dados['Quantidade de Parcelas'])
+            
+            self._find_element(By.ID, 'ValorParcela').click()
+            
+            valor_parcela = round(float(str(self._find_element(By.ID, 'ValorParcela').get_attribute('value')).replace('.', '').replace(',', '.')), 2)
+            
+            if not valor_parcela == round(dados['Valor da mensal'], 2):
+                print(P(f"Valor da mensal: {dados['Valor da mensal']} diferente do valor da parcela: {valor_parcela}", color='red'))
+                Informativo().register(text=f"Valor da mensal: {dados['Valor da mensal']} diferente do valor da parcela: {valor_parcela}", color='<django:red>')
+                return f"Valor da mensal: {round(dados['Valor da mensal'], 2)} diferente do valor da parcela: {valor_parcela}"
+            
+            
+            self._find_element(By.ID, 'DataPrimeiraParcela').clear()
+            self._find_element(By.ID, 'DataPrimeiraParcela').send_keys(dados['Vencimento'].strftime('%d%m%Y'))
+            
+            if is_pcv:
+                self._find_element(By.ID, 'TemCorrecao').click()
+            
+            self._find_element(By.ID, 'btnSerieAdd').click()
+            
+            self.__esperar_carregamento() 
+        except:
+            pass
           
         
         total_diferenca = float(self._find_element(By.ID, 'total-diferenca').text.replace('.', '').replace(',', '.'))
@@ -255,8 +277,10 @@ class Imobme(NavegadorChrome):
         else:
             self._find_element(By.ID, 'Observacao').send_keys("KITEI")
         
+        import pdb;pdb.set_trace()
         if not debug:
             self._find_element(By.ID, 'Solicitar').click()
+        
         
         try:
             alert = self._find_element(By.ID, 'divAlert', timeout=1)
