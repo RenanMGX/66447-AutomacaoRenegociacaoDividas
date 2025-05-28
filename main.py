@@ -56,7 +56,7 @@ class Main:
             for row, value in df.iterrows():
                 print(P(f"Processando linha {int(str(row)) + 1} de {len(df)}: {value['Numero do contrato']}"))
                 Informativo().register(f"Processando linha {int(str(row)) + 1} de {len(df)}: {value['Numero do contrato']}")
-                if (os.environ['conclusion_phrase'] in value['Retorno']) or (os.environ['already_exist'] in value['Retorno']):
+                if (os.environ['conclusion_phrase'] in str(value['Retorno'])) or (os.environ['already_exist'] in str(value['Retorno'])):
                     retorno[row] = os.environ['conclusion_phrase']
                     continue
                 try:
