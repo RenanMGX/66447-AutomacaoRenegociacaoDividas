@@ -85,14 +85,7 @@ class Imobme(NavegadorChrome):
         url = os.path.join(self.base_url, endpoint)
         print(P(f"Carregando página: {url}...          ", color='yellow'))  
         
-        for _ in range(10):
-            try:
-                self.get(url)
-                return
-            except:
-                if _ >= 9:
-                    self.get(url)
-                sleep(1)
+        self.get(url)
         
     def __esperar_carregamento(self, *, initial_wait:Union[int, float]=1):
         sleep(initial_wait)
@@ -111,7 +104,7 @@ class Imobme(NavegadorChrome):
         print(P("Pagina Iniciada no Contrato!"))
         
     @verify_login
-    def registrar_renegociacao(self, dados:dict, *, debug:bool=False):        
+    def registrar_renegociacao(self, dados:dict, *, debug:bool=False):   
         self.__load_page(f"Contrato/PosicaoFinanceira/{int(dados['Numero do contrato'])}")
         
         data_base:datetime = dados['Data base']
@@ -121,6 +114,17 @@ class Imobme(NavegadorChrome):
         self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[2]/div[1]/form/button').click()
         self.__esperar_carregamento()
         self.__load_page(f"Contrato/Renegociacao/{int(dados['Numero do contrato'])}?dataPosicao={data_base.strftime('%Y-%m-%d')}", remover_barra_final=True)
+        
+        try:
+            adv_text = self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[1]/div/div').text
+            if 'Este contrato já possui uma solicitação em andamento.' in adv_text:
+                print(P(adv_text, color='red'))
+                Informativo().register(text=adv_text, color='<django:red>')
+                return adv_text
+        except:
+            pass
+        
+        
         
         is_pcv = False
         tbody_s = self.find_elements(By.TAG_NAME, 'tbody')

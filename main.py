@@ -1,14 +1,19 @@
 import os
 os.environ['project_name'] = "66447 - Automação de Renegociação de Dividas"
-os.environ['conclusion_phrase'] = "Sucesso!"
+os.environ['conclusion_phrase'] = "sucesso!"
+os.environ['already_exist'] = "Este contrato já possui uma solicitação em andamento."
 ##################
 from Entities.dependencies.informativo import Informativo
 Informativo().limpar()
 from Entities.dependencies.arguments import Arguments
 from Entities.preparar_dados import PrepararDados
+from Entities.dependencies.config import Config
 from Entities.imobme import Imobme
 from Entities.dependencies.logs import Logs, traceback
 from Entities.dependencies.functions import P
+
+from distutils.util import strtobool
+
 
 import pandas as pd
 
@@ -36,13 +41,13 @@ class Main:
         
         df = PrepararDados.preparar_dados(path)
         if PrepararDados.validar_dados(df):
-            bot = Imobme(headless=False)
+            bot = Imobme(headless=bool(strtobool(Config()['nav']['headless'])))
 
             retorno = {}
             for row, value in df.iterrows():
                 print(P(f"Processando linha {int(str(row)) + 1} de {len(df)}: {value['Numero do contrato']}"))
                 Informativo().register(f"Processando linha {int(str(row)) + 1} de {len(df)}: {value['Numero do contrato']}")
-                if value['Observação'] == os.environ['conclusion_phrase']:
+                if (os.environ['conclusion_phrase'] in value['Retorno']) or (os.environ['already_exist'] in value['Retorno']):
                     retorno[row] = os.environ['conclusion_phrase']
                     continue
                 try:
@@ -65,6 +70,8 @@ class Main:
             
     @staticmethod
     def teste():
+        import pdb;pdb.set_trace()
+        bool(strtobool(Config()['nav']['headless']))
         input("Teste de execução bem-sucedida. Pressione Enter para continuar...")
             
 if __name__ == '__main__':

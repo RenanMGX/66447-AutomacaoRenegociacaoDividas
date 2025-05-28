@@ -9,5 +9,8 @@ default:Dict[str, Dict[str,object]] = {
     },
     'crd': {
         'imobme': 'IMOBME_QAS'
+    },
+    'nav':{
+        'headless': True
     }
 }
