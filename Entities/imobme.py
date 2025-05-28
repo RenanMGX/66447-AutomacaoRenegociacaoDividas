@@ -178,6 +178,9 @@ class Imobme(NavegadorChrome):
         self._find_element(By.ID, 'DataPrimeiraParcela').clear()
         self._find_element(By.ID, 'DataPrimeiraParcela').send_keys(dados['Vencimento da entrada'].strftime('%d%m%Y'))
         
+        if is_pcv:
+            self._find_element(By.ID, 'TemCorrecao').click()
+        
         self._find_element(By.ID, 'btnSerieAdd').click()
         
         self.__esperar_carregamento() 
