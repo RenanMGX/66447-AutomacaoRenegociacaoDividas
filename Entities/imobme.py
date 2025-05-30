@@ -190,15 +190,16 @@ class Imobme(NavegadorChrome):
             self._find_element(By.ID, 'btnSerieAdd').click()
             
             self.__esperar_carregamento() 
+            
+            total_diferenca = round(float(self._find_element(By.ID, 'total-diferenca').text.replace('.', '').replace(',', '.')), 2)
+            
+            if not total_diferenca == round(dados['Valor parcelado'], 2):
+                print(P(f"Valor parcelado: {dados['Valor parcelado']} diferente do valor total diferenca: {total_diferenca}", color='red'))
+                Informativo().register(text=f"Valor parcelado: {dados['Valor parcelado']} diferente do valor total diferenca: {total_diferenca}", color='<django:red>')
+                return f"Valor parcelado: {round(dados['Valor parcelado'], 2)} diferente do valor total diferenca: {total_diferenca}"
         except:
             pass
                     
-        total_diferenca = round(float(self._find_element(By.ID, 'total-diferenca').text.replace('.', '').replace(',', '.')), 2)
-        
-        if not total_diferenca == round(dados['Valor parcelado'], 2):
-            print(P(f"Valor parcelado: {dados['Valor parcelado']} diferente do valor total diferenca: {total_diferenca}", color='red'))
-            Informativo().register(text=f"Valor parcelado: {dados['Valor parcelado']} diferente do valor total diferenca: {total_diferenca}", color='<django:red>')
-            return f"Valor parcelado: {round(dados['Valor parcelado'], 2)} diferente do valor total diferenca: {total_diferenca}"
         
         # Parcelas
         try:
@@ -246,16 +247,17 @@ class Imobme(NavegadorChrome):
             self._find_element(By.ID, 'btnSerieAdd').click()
             
             self.__esperar_carregamento() 
+            
+            total_diferenca = float(self._find_element(By.ID, 'total-diferenca').text.replace('.', '').replace(',', '.'))
+            
+            if total_diferenca != 0:
+                print(P(f"Valor total diferenca: {total_diferenca} diferente de 0", color='red'))
+                Informativo().register(text=f"Valor total diferenca: {total_diferenca} diferente de 0", color='<django:red>')
+                return f"Valor total diferenca: {total_diferenca} diferente de 0"
         except:
             pass
           
         
-        total_diferenca = float(self._find_element(By.ID, 'total-diferenca').text.replace('.', '').replace(',', '.'))
-        
-        if total_diferenca != 0:
-            print(P(f"Valor total diferenca: {total_diferenca} diferente de 0", color='red'))
-            Informativo().register(text=f"Valor total diferenca: {total_diferenca} diferente de 0", color='<django:red>')
-            return f"Valor total diferenca: {total_diferenca} diferente de 0"
         
         #import pdb;pdb.set_trace()
         try:
