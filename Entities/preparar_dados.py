@@ -81,7 +81,6 @@ class PrepararDados:
                 ws.range(target_cell).value = value
 
         
-        #import pdb;pdb.set_trace()
         wb.save()
         wb.close()
         app.kill()
