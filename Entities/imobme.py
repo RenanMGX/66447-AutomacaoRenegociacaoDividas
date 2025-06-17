@@ -50,7 +50,6 @@ class Imobme(NavegadorChrome):
                 if "\nUsuário já logado!\n" in self.find_element(By.TAG_NAME, 'html').text:
                     self.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/button[1]').click()
                 
-                #import pdb;pdb.set_trace()
                 print(P("Login efetuado com sucesso!", color='green'))
                 sleep(1)
 
@@ -259,7 +258,6 @@ class Imobme(NavegadorChrome):
           
         
         
-        #import pdb;pdb.set_trace()
         try:
             self._find_element(By.XPATH, '/html/body/div[2]/div[3]/div/button', timeout=2).click()
             erro_msg = self._find_element(By.ID, 'mensagemModal').text
@@ -279,7 +277,6 @@ class Imobme(NavegadorChrome):
         else:
             self._find_element(By.ID, 'Observacao').send_keys("KITEI")
         
-        import pdb;pdb.set_trace()
         if not debug:
             self._find_element(By.ID, 'Solicitar').click()
         
