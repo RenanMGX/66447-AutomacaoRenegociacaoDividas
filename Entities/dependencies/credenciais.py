@@ -12,7 +12,7 @@ class CredentialFileNotFoundError(Exception):
 
 class Credential:
     #path_raiz:str=f"C:\\Users\\{getuser()}\\PATRIMAR ENGENHARIA S A\\RPA - Documentos\\RPA - Dados\\CRD\\.patrimar_rpa\\credenciais\\"
-    path_raiz:str = SharePointFolders(r'RPA - Dados\CRD\.patrimar_rpa\credenciais')
+    path_raiz:str = SharePointFolders(r'RPA - Dados\CRD\.patrimar_rpa\credenciais').value
     
     @property
     def path(self):
