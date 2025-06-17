@@ -58,6 +58,15 @@ class PrepararDados:
         return True
     
     @staticmethod
+    def replace_type(df: pd.DataFrame) -> pd.DataFrame:
+        df['Data base'] = pd.to_datetime(df['Data base'])
+        df['1° Vencimento'] = pd.to_datetime(df['1° Vencimento'])
+        df['2° Vencimento'] = pd.to_datetime(df['2° Vencimento'])
+        df['Vencimento'] = pd.to_datetime(df['Vencimento'])
+        
+        return df
+    
+    @staticmethod
     def regitrar_retorno(*, path:str, retorno:Dict[int, str]) -> None:
         if not os.path.exists(path):
             raise FileNotFoundError(f"{path=} não existe!")

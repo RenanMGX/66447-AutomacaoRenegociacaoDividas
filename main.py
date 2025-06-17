@@ -50,6 +50,7 @@ class Main:
         
         df = PrepararDados.preparar_dados(path)
         if PrepararDados.validar_dados(df):
+            df = PrepararDados.replace_type(df)
             bot = Imobme(headless=strtobool(Config()['nav']['headless']))
 
             retorno = {}
