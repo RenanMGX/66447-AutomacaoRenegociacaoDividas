@@ -40,7 +40,8 @@ class PrepararDados:
                           'Valor da mensal',
                           'Observação',
                           'Vencimento',
-                          'Retorno'
+                          'Retorno',
+                          'Desconto'
                           
                       ]
                       

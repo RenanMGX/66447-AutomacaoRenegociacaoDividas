@@ -139,6 +139,15 @@ class Imobme(NavegadorChrome):
                 pass
           
         #self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[6]/div/h4').location_once_scrolled_into_view
+        try:
+            if math.isnan(dados['Desconto']):
+                raise Exception("não é valor valido")
+            
+            while len(str(self._find_element(By.ID, 'ValorDesconto').get_attribute('value'))) > 0:
+                self._find_element(By.ID, 'ValorDesconto').send_keys(Keys.BACKSPACE)
+            self._find_element(By.ID, 'ValorDesconto').send_keys(dados['Desconto'])
+        except Exception as e:
+            print(P(f"Erro ao inserir desconto: {str(e)}", color='red'))
         
         self._find_element(By.XPATH, '//*[@id="tab-serie"]/thead/tr').location_once_scrolled_into_view
         

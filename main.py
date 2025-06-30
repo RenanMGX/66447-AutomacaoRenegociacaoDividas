@@ -48,8 +48,14 @@ class Main:
             
         df = pd.read_excel(path)    
         
-        df = PrepararDados.preparar_dados(path)
-        if PrepararDados.validar_dados(df):
+        try:
+            df = PrepararDados.preparar_dados(path)
+            dados_validados = PrepararDados.validar_dados(df)
+        except Exception as e:
+            Informativo().register(f"{type(e)} - {str(e)}", color='<django:red>')
+            raise e
+            
+        if dados_validados:
             df = PrepararDados.replace_type(df)
             bot = Imobme(headless=strtobool(Config()['nav']['headless']))
 
