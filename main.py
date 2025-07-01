@@ -45,10 +45,17 @@ class Main:
         Informativo().register("Iniciando o processo de renegociação de dívidas...", color='<django:blue>')
         
         path = get_path()
-            
+        
+        try:
+            PrepararDados.corrigir_colunas_spacos(path)
+        except Exception as e:
+            Informativo().register(f"{type(e)} - {str(e)}", color='<django:red>')
+            raise e
+          
         df = pd.read_excel(path)    
         
         try:
+            
             df = PrepararDados.preparar_dados(path)
             dados_validados = PrepararDados.validar_dados(df)
         except Exception as e:

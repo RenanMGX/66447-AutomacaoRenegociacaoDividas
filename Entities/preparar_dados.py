@@ -98,3 +98,28 @@ class PrepararDados:
         Functions.fechar_excel(path)
         
         return
+
+    @staticmethod   
+    def corrigir_colunas_spacos(path:str) -> None:
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"O arquivo '{path}' não foi encontrado!")
+        elif not path.lower().endswith(('.xlsx', '.xls', '.xlsm')):
+            raise TypeError("O arquivo deve ser um Excel!")
+        
+        app = xw.App(visible=False)
+        with app.books.open(path) as wb:
+            ws:Sheet = wb.sheets[0]
+            
+            columns_cells:Range = ws.range("A1").expand("right")
+            for cell in columns_cells:
+                cell.value = str(cell.value).strip()
+                
+            wb.save()
+            
+        app.kill()
+        
+        return
+
+if __name__ == "__main__":
+    pass
+ 
