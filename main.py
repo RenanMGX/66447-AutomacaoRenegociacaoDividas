@@ -11,6 +11,7 @@ from Entities.dependencies.config import Config
 from Entities.imobme import Imobme
 from Entities.dependencies.logs import Logs, traceback
 from Entities.dependencies.functions import P
+import json
 
 #from distutils.util import strtobool
 
@@ -84,8 +85,19 @@ class Main:
                 retorno[row] = response
 
             bot.quit()
+            
+            with open(os.path.join(os.getcwd(), 'last_retorno.json'), 'w') as f:
+                json.dump(retorno, f, indent=4)
+            
+            for _ in range(3): 
+                try:
+                    PrepararDados.regitrar_retorno(path=path, retorno=retorno)
+                    break
+                except Exception as e:
+                    if _ >= 2:
+                        Informativo().register(f"{type(e)} - {str(e)}", color='<django:red>')
+                        raise e
                 
-            PrepararDados.regitrar_retorno(path=path, retorno=retorno)
             
             print(P("Processo concluído com sucesso!", color='green'))
             Informativo().register("Processo concluído com sucesso!", color='<django:green>')
