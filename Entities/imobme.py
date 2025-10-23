@@ -111,7 +111,15 @@ class Imobme(NavegadorChrome):
         self._find_element(By.ID, 'DataPosicao').clear()
         self._find_element(By.ID, 'DataPosicao').send_keys(data_base.strftime('%d%m%Y'))
 
-        self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[2]/div[1]/form/button').click()
+        clicou = False
+        for bt in self.find_elements(By.TAG_NAME, 'button'):
+            if bt.text == 'Calcular':
+                bt.click()
+                clicou = True
+                break
+        if not clicou:
+            raise Exception("Botão Calcular não encontrado!")
+                                   
         self.__esperar_carregamento()
         self.__load_page(f"Contrato/Renegociacao/{int(dados['Numero do contrato'])}?dataPosicao={data_base.strftime('%Y-%m-%d')}", remover_barra_final=True)
         
