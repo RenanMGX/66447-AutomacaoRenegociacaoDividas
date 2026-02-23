@@ -3,11 +3,10 @@ import re
 import exceptions
 import math
 
-from dependencies.functions import P
-from dependencies.navegador_chrome import NavegadorChrome, By, Keys, WebDriver, WebElement, Select
-from dependencies.credenciais import Credential
-from dependencies.config import Config
-from dependencies.informativo import Informativo
+from patrimar_dependencies.functions import P
+from patrimar_dependencies.navegador_chrome import NavegadorChrome, By, Keys, WebDriver, WebElement, Select
+#from patrimar_dependencies.informativo import Informativo
+from .alert_botcity import bot_alert
 from time import sleep
 from typing import Union
 from datetime import datetime
@@ -58,13 +57,24 @@ class Imobme(NavegadorChrome):
             return result
         return wrap
     
-    def __init__(self, *, headless:bool=True, download_path:str=os.path.join(os.getcwd(), 'downloads')) -> None:
+    def __init__(self, *, 
+                url,
+                login,
+                password,
+                headless:bool=True, 
+                download_path:str=os.path.join(os.getcwd(), 'downloads')
+            ) -> None:
         if (re.search(r'[.][a-zA-Z]+', os.path.basename(download_path))):
             download_path = os.path.dirname(download_path)
         if not os.path.exists(download_path):
             os.makedirs(download_path)
             
-        self.__crd:dict = Credential(Config()['crd']['imobme']).load()
+        #self.__crd:dict = Credential(Config()['crd']['imobme']).load()
+        self.__crd:dict = {
+            'url': url,
+            'login': login,
+            'password': password
+        }
                     
         super().__init__(download_path=download_path, headless=headless)
         
@@ -127,7 +137,8 @@ class Imobme(NavegadorChrome):
             adv_text = self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[1]/div/div').text
             if os.environ['already_exist'] in adv_text:
                 print(P(adv_text, color='red'))
-                Informativo().register(text=adv_text, color='<django:red>')
+                # Informativo().register(text=adv_text, color='<django:red>')
+                bot_alert(F"        {adv_text}", alert_type='ERROR')
                 return adv_text
         except:
             pass
@@ -177,7 +188,8 @@ class Imobme(NavegadorChrome):
         
         if not total_com_ajuste == round(dados['Valor vencido'], 2):
             print(P(f"Valor vencido: {dados['Valor vencido']} diferente do valor total com ajuste: {total_com_ajuste}", color='red'))
-            Informativo().register(text=f"Valor vencido: {dados['Valor vencido']} diferente do valor total com ajuste: {total_com_ajuste}", color='<django:red>')
+            # Informativo().register(text=f"Valor vencido: {dados['Valor vencido']} diferente do valor total com ajuste: {total_com_ajuste}", color='<django:red>')
+            bot_alert(f"        Valor vencido: {dados['Valor vencido']} diferente do valor total com ajuste: {total_com_ajuste}", alert_type='ERROR')
             return f"Valor vencido: {dados['Valor vencido']} diferente do valor total com ajuste: {total_com_ajuste}"
         
         self._find_element(By.ID, 'total-com-ajuste').location_once_scrolled_into_view
@@ -211,7 +223,8 @@ class Imobme(NavegadorChrome):
             
             if not total_diferenca == round(dados['Valor parcelado'], 2):
                 print(P(f"Valor parcelado: {dados['Valor parcelado']} diferente do valor total diferenca: {total_diferenca}", color='red'))
-                Informativo().register(text=f"Valor parcelado: {dados['Valor parcelado']} diferente do valor total diferenca: {total_diferenca}", color='<django:red>')
+                # Informativo().register(text=f"Valor parcelado: {dados['Valor parcelado']} diferente do valor total diferenca: {total_diferenca}", color='<django:red>')
+                bot_alert(f"        Valor parcelado: {dados['Valor parcelado']} diferente do valor total diferenca: {total_diferenca}", alert_type='ERROR')
                 return f"Valor parcelado: {round(dados['Valor parcelado'], 2)} diferente do valor total diferenca: {total_diferenca}"
         except:
             pass
@@ -250,7 +263,8 @@ class Imobme(NavegadorChrome):
             
             if not valor_parcela == round(dados['Valor da mensal'], 2):
                 print(P(f"Valor da mensal: {dados['Valor da mensal']} diferente do valor da parcela: {valor_parcela}", color='red'))
-                Informativo().register(text=f"Valor da mensal: {dados['Valor da mensal']} diferente do valor da parcela: {valor_parcela}", color='<django:red>')
+                # Informativo().register(text=f"Valor da mensal: {dados['Valor da mensal']} diferente do valor da parcela: {valor_parcela}", color='<django:red>')
+                bot_alert(f"        Valor da mensal: {dados['Valor da mensal']} diferente do valor da parcela: {valor_parcela}", alert_type='ERROR')
                 return f"Valor da mensal: {round(dados['Valor da mensal'], 2)} diferente do valor da parcela: {valor_parcela}"
             
             
@@ -268,7 +282,8 @@ class Imobme(NavegadorChrome):
             
             if total_diferenca != 0:
                 print(P(f"Valor total diferenca: {total_diferenca} diferente de 0", color='red'))
-                Informativo().register(text=f"Valor total diferenca: {total_diferenca} diferente de 0", color='<django:red>')
+                # Informativo().register(text=f"Valor total diferenca: {total_diferenca} diferente de 0", color='<django:red>')
+                bot_alert(f"        Valor total diferenca: {total_diferenca} diferente de 0", alert_type='ERROR')
                 return f"Valor total diferenca: {total_diferenca} diferente de 0"
         except:
             pass
@@ -279,7 +294,8 @@ class Imobme(NavegadorChrome):
             self._find_element(By.XPATH, '/html/body/div[2]/div[3]/div/button', timeout=2).click()
             erro_msg = self._find_element(By.ID, 'mensagemModal').text
             print(P(f"Erro: {erro_msg}", color='red'))
-            Informativo().register(text=f"Erro: {erro_msg}", color='<django:red>')
+            # Informativo().register(text=f"Erro: {erro_msg}", color='<django:red>')
+            bot_alert(f"        Erro: {erro_msg}", alert_type='ERROR')
             return f"{round(dados['Valor parcelado'], 2)} {erro_msg}"
 
         except:
@@ -301,7 +317,8 @@ class Imobme(NavegadorChrome):
         try:
             alert = self._find_element(By.ID, 'divAlert', timeout=1)
             print(P(f"Sucesso: {alert.text}", color='green'))
-            Informativo().register(text=f"Sucesso: {alert.text}", color='<django:green>')
+            # Informativo().register(text=f"Sucesso: {alert.text}", color='<django:green>')
+            bot_alert(f"        Sucesso: {alert.text}")
             return alert.text
         except:
             pass
@@ -310,7 +327,8 @@ class Imobme(NavegadorChrome):
         msg_final = self._find_element(By.XPATH, '//*[@id="Content"]/section/div[2]/div/div/div[2]/div/div').text
         
         print(P("Renegociação registrada com sucesso!", color='green'))
-        Informativo().register(text="Renegociação registrada com sucesso!", color='<django:green>')
+        # Informativo().register(text="Renegociação registrada com sucesso!", color='<django:green>')
+        bot_alert("        Renegociação registrada com sucesso!")
         
         return msg_final
 

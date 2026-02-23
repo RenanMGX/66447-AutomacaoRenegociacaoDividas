@@ -3,7 +3,7 @@ import xlwings as xw
 from xlwings.main import Book, Sheet, Range
 from typing import Dict, List
 import os
-from Entities.dependencies.functions import Functions
+from patrimar_dependencies.functions import Functions
 import re
 
 class PrepararDados:
