@@ -76,26 +76,26 @@ class PrepararDados:
         
         Functions.fechar_excel(path)
         app = xw.App(visible=False)
-        wb:Book = app.books.open(path)
-        ws:Sheet = wb.sheets[0]
-        
-        columns:Range = ws.range('A1').expand('right')
-        observacao_address:str = ""
-        for column in columns:
-            if column.value == 'Retorno':
-                observacao_address = column.get_address()
-                
-        if observacao_address:
-            for row, value in retorno.items():
-                target_cell = re.sub(r'[0-9]+', str(row+2), observacao_address)
-                ws.range(target_cell).value = value
+        try:
+            wb:Book = app.books.open(path)
+            ws:Sheet = wb.sheets[0]
+            
+            columns:Range = ws.range('A1').expand('right')
+            observacao_address:str = ""
+            for column in columns:
+                if column.value == 'Retorno':
+                    observacao_address = column.get_address()
+                    
+            if observacao_address:
+                for row, value in retorno.items():
+                    target_cell = re.sub(r'[0-9]+', str(row+2), observacao_address)
+                    ws.range(target_cell).value = value
 
-        
-        wb.save()
-        wb.close()
-        app.kill()
-        
-        Functions.fechar_excel(path)
+            wb.save()
+            wb.close()
+        finally:
+            app.kill()
+            Functions.fechar_excel(path)
         
         return
 

@@ -99,23 +99,28 @@ class Execute:
                 with open(str(file_path), 'wb') as _file:
                     _file.write(TaskBotCity.decode_file(file))
             
-            Main.start(
-                path=str(file_path),
-                url=maestro.get_credential(label=crd_param, key="url"),
-                login=maestro.get_credential(label=crd_param, key="login"),
-                password=maestro.get_credential(label=crd_param, key="password"),
-            )
-            
-            maestro.post_artifact(
-                task_id=int(execution.task_id),
-                artifact_name=os.path.basename(file_path),
-                filepath=str(file_path)
-            )      
-            
             try:
-                os.unlink(str(file_path))
-            except:
-                pass
+                Main.start(
+                    path=str(file_path),
+                    url=maestro.get_credential(label=crd_param, key="url"),
+                    login=maestro.get_credential(label=crd_param, key="login"),
+                    password=maestro.get_credential(label=crd_param, key="password"),
+                )
+            finally:
+                if file_path.exists():
+                    try:
+                        maestro.post_artifact(
+                            task_id=int(execution.task_id),
+                            artifact_name=os.path.basename(file_path),
+                            filepath=str(file_path)
+                        )
+                        bot_alert("Arquivo enviado ao BotCity com sucesso.")
+                    except Exception as post_e:
+                        bot_alert(f"Erro ao enviar artefato ao BotCity: {type(post_e)} - {str(post_e)}", alert_type='ERROR')
+                    try:
+                        os.unlink(str(file_path))
+                    except:
+                        pass
             
             
         elif method == "scheduled":

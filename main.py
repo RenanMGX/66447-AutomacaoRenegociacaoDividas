@@ -63,8 +63,6 @@ class Main:
             #Informativo().register(f"{type(e)} - {str(e)}", color='<django:red>')
             bot_alert(f"{type(e)} - {str(e)}", alert_type='ERROR')
             raise e
-          
-        df = pd.read_excel(path)    
         
         try:
             
@@ -85,23 +83,24 @@ class Main:
             )
 
             retorno = {}
-            for row, value in df.iterrows():
-                #Informativo().register(f"Processando linha {int(str(row)) + 1} de {len(df)}: {value['Numero do contrato']}")
-                bot_alert(f"    Processando linha {int(str(row)) + 1} de {len(df)} - Numero do contrato: {value['Numero do contrato']}")
-                if (os.environ['conclusion_phrase'] in str(value['Retorno'])) or (os.environ['already_exist'] in str(value['Retorno'])):
-                    retorno[row] = os.environ['conclusion_phrase']
-                    continue
-                try:
-                    response = bot.registrar_renegociacao(value.to_dict(), debug=False) # <-------- Debug OFF
-                except Exception as e:
-                    response = f"Exceção não tratada: {type(e)}, {str(e)}"
-                    print(P(response, color='red'))
-                    #Informativo().register(response, color='<django:red>')
-                    bot_alert(f"    {response}", alert_type='ERROR')
-                
-                retorno[row] = response
-
-            bot.quit()
+            try:
+                for row, value in df.iterrows():
+                    #Informativo().register(f"Processando linha {int(str(row)) + 1} de {len(df)}: {value['Numero do contrato']}")
+                    bot_alert(f"    Processando linha {int(str(row)) + 1} de {len(df)} - Numero do contrato: {value['Numero do contrato']}")
+                    if (os.environ['conclusion_phrase'] in str(value['Retorno'])) or (os.environ['already_exist'] in str(value['Retorno'])):
+                        retorno[row] = os.environ['conclusion_phrase']
+                        continue
+                    try:
+                        response = bot.registrar_renegociacao(value.to_dict(), debug=False) # <-------- Debug OFF
+                    except Exception as e:
+                        response = f"Exceção não tratada: {type(e)}, {str(e)}"
+                        print(P(response, color='red'))
+                        #Informativo().register(response, color='<django:red>')
+                        bot_alert(f"    {response}", alert_type='ERROR')
+                    
+                    retorno[row] = response
+            finally:
+                bot.quit()
             
             with open(os.path.join(os.getcwd(), 'last_retorno.json'), 'w') as f:
                 json.dump(retorno, f, indent=4)
@@ -111,10 +110,13 @@ class Main:
                     PrepararDados.regitrar_retorno(path=path, retorno=retorno)
                     break
                 except Exception as e:
+                    bot_alert(f"{type(e)} - {str(e)}", alert_type='ERROR')
                     if _ >= 2:
-                        #Informativo().register(f"{type(e)} - {str(e)}", color='<django:red>')
-                        bot_alert(f"{type(e)} - {str(e)}", alert_type='ERROR')
-                        raise e
+                        bot_alert(
+                            "Não foi possível registrar o retorno no arquivo após 3 tentativas. "
+                            "O arquivo será enviado ao BotCity no estado atual.",
+                            alert_type='WARN'#type: ignore
+                        )
                 
             
             #Informativo().register("Processo concluído com sucesso!", color='<django:green>')
